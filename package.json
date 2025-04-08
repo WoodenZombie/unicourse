@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "scripts": {
+  "start": "concurrently \"cd server && npm run dev\" \"cd client && npm start\"",
+  "install-all": "npm install && cd client && npm install && cd ../server && npm install"
+}
+}
