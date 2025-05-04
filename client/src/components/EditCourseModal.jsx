@@ -1,21 +1,30 @@
-import { useState } from 'react';
-import { 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  TextField, 
-  Button,
-  Alert,
-  Stack,
+import { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
   Typography,
-  InputAdornment
+  Button,
+  Stack,
+  Alert,
+  CircularProgress,
+  InputAdornment,
+  Chip
 } from '@mui/material';
-import api from '../services/api';
+import {
+  School,
+  Person,
+  Schedule,
+  Star,
+  Description
+} from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
-import { Schedule, School, Person } from '@mui/icons-material';
+import api from '../services/api';
+import dayjs from 'dayjs';
 
-export default function AddCourseModal({ open, onClose, onCourseAdded }) {
+export default function EditCourseModal({ open, onClose, course, onSubmit }) {
   const [form, setForm] = useState({
     name: '',
     professor: '',
@@ -27,13 +36,28 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
+  // Initialize form with course data
+  useEffect(() => {
+    if (course) {
+      setForm({
+        name: course.name || '',
+        professor: course.professor || '',
+        schedule: course.schedule || '',
+        credits: course.credits || 3,
+        description: course.description || ''
+      });
+    }
+  }, [course]);
+
   const validateForm = () => {
     const newErrors = {};
     if (!form.name.trim()) newErrors.name = 'Course name is required';
     if (!form.professor.trim()) newErrors.professor = 'Professor name is required';
     if (!form.schedule.trim()) newErrors.schedule = 'Schedule is required';
-    if (form.credits < 1 || form.credits > 10) newErrors.credits = 'Credits must be between 1-10';
-    
+    if (form.credits < 1 || form.credits > 10) {
+      newErrors.credits = 'Credits must be between 1-10';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -43,48 +67,59 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
     
     setIsSubmitting(true);
     try {
-      const newCourse = await api.createCourse({
+      const updatedCourse = await api.updateCourse(course._id, {
         ...form,
         credits: Number(form.credits)
       });
-      onCourseAdded(newCourse);
-      enqueueSnackbar('Course added successfully!', { variant: 'success' });
+      
+      onSubmit(updatedCourse);
+      enqueueSnackbar('Course updated successfully!', { variant: 'success' });
       handleClose();
     } catch (err) {
-      console.error('Failed to create course:', err);
-      enqueueSnackbar(err.response?.data?.message || 'Failed to add course', { 
-        variant: 'error' 
-      });
+      console.error('Failed to update course:', err);
+      enqueueSnackbar(
+        err.response?.data?.message || 'Failed to update course', 
+        { variant: 'error' }
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
-    setForm({ name: '', professor: '', schedule: '', credits: 3, description: '' });
-    setErrors({});
-    onClose();
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
+  const handleClose = () => {
+    setErrors({});
+    onClose();
+  };
+
+  if (!course) return null;
+
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        <Typography variant="h6" fontWeight="bold">
-          Add New Course
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <School color="primary" />
+          <Typography variant="h6" component="span">
+            Edit Course
+          </Typography>
+          <Chip 
+            label={`ID: ${course._id.slice(-6)}`} 
+            size="small" 
+            color="info"
+            variant="outlined"
+          />
+        </Stack>
       </DialogTitle>
       
       <DialogContent dividers>
-        <Stack spacing={3} sx={{ pt: 1 }}>
+        <Stack spacing={3} sx={{ pt: 2 }}>
           {Object.keys(errors).length > 0 && (
             <Alert severity="error">
               Please fix the errors in the form
@@ -127,12 +162,12 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
           
           <TextField
             name="schedule"
-            label="Schedule (e.g. Mon/Wed 10:00-11:30)"
+            label="Schedule"
             fullWidth
             value={form.schedule}
             onChange={handleChange}
             error={!!errors.schedule}
-            helperText={errors.schedule || "Example format: Mon/Wed 10:00-11:30"}
+            helperText={errors.schedule || "Example: Mon/Wed 10:00-11:30"}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -156,16 +191,30 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
               max: 10,
               step: 1
             }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Star color="action" />
+                </InputAdornment>
+              ),
+            }}
           />
           
           <TextField
             name="description"
-            label="Description (Optional)"
+            label="Description"
             fullWidth
             multiline
             rows={3}
             value={form.description}
             onChange={handleChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Description color="action" />
+                </InputAdornment>
+              ),
+            }}
           />
         </Stack>
       </DialogContent>
@@ -181,10 +230,11 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
         <Button 
           onClick={handleSubmit} 
           variant="contained"
-          disabled={isSubmitting || !form.name || !form.professor || !form.schedule}
+          disabled={isSubmitting}
           sx={{ minWidth: 120 }}
+          endIcon={isSubmitting ? <CircularProgress size={20} /> : null}
         >
-          {isSubmitting ? 'Adding...' : 'Add Course'}
+          {isSubmitting ? 'Saving...' : 'Save Changes'}
         </Button>
       </DialogActions>
     </Dialog>

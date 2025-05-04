@@ -33,7 +33,7 @@ const CourseSchema = new Schema({
   },
   description: {
     type: String,
-    maxlength: [100, 'Description cannot exceed 500 characters'],
+    maxlength: [100, 'Description cannot exceed 100 characters'],
     trim: true
   }
 }, { 

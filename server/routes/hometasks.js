@@ -1,111 +1,150 @@
 import { Router } from 'express';
-const router = Router();
+import mongoose from 'mongoose';
 import Hometask from '../models/Hometask.js';
+import Course from '../models/Course.js';
+import { 
+  successResponse, 
+  errorResponse, 
+  notFoundResponse,
+  validationErrorResponse 
+} from '../utils/apiResponse.js';
 
-// GET all hometasks with optional filtering
+const router = Router();
+
+// Middleware to validate ObjectId
+const validateObjectId = (req, res, next) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return validationErrorResponse(res, 'Invalid ID format');
+  }
+  next();
+};
+
+// GET all hometasks
 router.get('/', async (req, res) => {
   try {
-    const { status, courseId } = req.query;
-    const filter = {};
-    if (status) filter.status = status;
-    if (courseId) filter.courseId = courseId;
+    const hometasks = await Hometask.find().select('-__v');
+    successResponse(res, hometasks);
+  } catch (err) {
+    console.error('Error fetching hometasks:', err);
+    errorResponse(res, 'Server error while fetching hometasks');
+  }
+});
+
+// GET hometask by id
+router.get('/:id', validateObjectId, async (req, res) => {
+  try {
+    const hometask = await Hometask.findById(req.params.id).select('-__v');
     
-    const hometasks = await Hometask.find(filter).populate('courseId');
-    res.json(hometasks);
+    if (!hometask) {
+      return notFoundResponse(res, 'Hometask');
+    }
+    
+    successResponse(res, hometask);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(`Error fetching hometask ${req.params.id}:`, err);
+    errorResponse(res, 'Server error while fetching hometask');
   }
 });
 
-// GET a specific hometask by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const hometask = await Hometask.findById(req.params.id).populate('courseId');
-    if (!hometask) return res.status(404).json({ message: 'Hometask not found' });
-    res.json(hometask);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// POST (create) a new hometask
+// POST (create) new hometask
 router.post('/', async (req, res) => {
-  const { courseId, description, deadline } = req.body;
-  
   try {
-    // validate deadline is in the future
-    if (new Date(deadline) < new Date()) {
-      return res.status(400).json({ message: 'Deadline must be in the future' });
+    const { courseId, title, description, deadline } = req.body;
+    
+    // Validate course exists
+    const courseExists = await Course.exists({ _id: courseId });
+    if (!courseExists) {
+      return notFoundResponse(res, 'Course');
     }
 
     const hometask = new Hometask({
       courseId,
+      title,
       description,
-      deadline: new Date(deadline),
+      deadline,
       status: 'pending'
     });
     
     await hometask.save();
-    res.status(201).json(hometask);
+    successResponse(res, hometask, 201);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error('Error creating hometask:', err);
+    
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      return validationErrorResponse(res, errors);
+    }
+    
+    errorResponse(res, 'Server error while creating hometask');
   }
 });
 
-// PUT (update) a hometask
-router.put('/:id', async (req, res) => {
-  const { courseId, description, deadline, status } = req.body;
-  
+// PUT (update) hometask by id
+router.put('/:id', validateObjectId, async (req, res) => {
   try {
-    // validate deadline is in the future if provided
-    if (deadline && new Date(deadline) < new Date()) {
-      return res.status(400).json({ message: 'Deadline must be in the future' });
+    const hometask = await Hometask.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+        select: '-__v'
+      }
+    );
+
+    if (!hometask) {
+      return notFoundResponse(res, 'Hometask');
     }
 
-    const updates = {};
-    if (courseId) updates.courseId = courseId;
-    if (description) updates.description = description;
-    if (deadline) updates.deadline = new Date(deadline);
-    if (status) updates.status = status;
-
-    const hometask = await Hometask.findByIdAndUpdate(
-      req.params.id,
-      updates,
-      { new: true, runValidators: true }
-    ).populate('courseId');
-    
-    if (!hometask) return res.status(404).json({ message: 'Hometask not found' });
-    res.json(hometask);
+    successResponse(res, hometask);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error(`Error updating hometask ${req.params.id}:`, err);
+    
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      return validationErrorResponse(res, errors);
+    }
+    
+    errorResponse(res, 'Server error while updating hometask');
   }
 });
 
-// PATCH mark hometask as completed
-router.patch('/:id/complete', async (req, res) => {
+// PATCH (mark as completed)
+router.patch('/:id/complete', validateObjectId, async (req, res) => {
   try {
     const hometask = await Hometask.findByIdAndUpdate(
       req.params.id,
-      { status: 'completed' },
-      { new: true }
-    ).populate('courseId');
-    
-    if (!hometask) return res.status(404).json({ message: 'Hometask not found' });
-    res.json(hometask);
+      { status: 'completed', completedAt: new Date() },
+      {
+        new: true,
+        select: '-__v'
+      }
+    );
+
+    if (!hometask) {
+      return notFoundResponse(res, 'Hometask');
+    }
+
+    successResponse(res, hometask);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(`Error completing hometask ${req.params.id}:`, err);
+    errorResponse(res, 'Server error while completing hometask');
   }
 });
 
-// DELETE a hometask
-router.delete('/:id', async (req, res) => {
+// DELETE hometask by id
+router.delete('/:id', validateObjectId, async (req, res) => {
   try {
     const hometask = await Hometask.findByIdAndDelete(req.params.id);
-    
-    if (!hometask) return res.status(404).json({ message: 'Hometask not found' });
-    res.json({ message: 'Hometask deleted successfully' });
+
+    if (!hometask) {
+      return notFoundResponse(res, 'Hometask');
+    }
+
+    successResponse(res, { message: 'Hometask deleted successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(`Error deleting hometask ${req.params.id}:`, err);
+    errorResponse(res, 'Server error while deleting hometask');
   }
 });
 

@@ -1,65 +1,36 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { SnackbarProvider } from 'notistack';
+import App from './App.js';
+import theme from './theme.js';
+import { ThemeProvider } from '@mui/material/styles/index.js';
+import CssBaseline from '@mui/material/CssBaseline/index.js';
 
-// Создаем кастомную тему Material-UI
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2', // Синий
-    },
-    secondary: {
-      main: '#dc004e', // Розовый
-    },
-    background: {
-      default: '#f5f5f5', // Светло-серый фон
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
-  typography: {
-    fontFamily: [
-      '"Roboto"',
-      '"Helvetica"',
-      '"Arial"',
-      'sans-serif'
-    ].join(','),
-    h4: {
-      fontWeight: 600,
-      color: '#2c3e50'
-    },
-    h5: {
-      fontWeight: 500
-    }
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none', // Отключаем автоматическое преобразование в верхний регистр
-          borderRadius: '8px'
-        }
-      }
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-        }
-      }
-    }
-  }
 });
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const container = document.getElementById('root');
+const root = createRoot(container);
+
 root.render(
-  <React.StrictMode>
+  <QueryClientProvider client={queryClient}>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App />
+      <SnackbarProvider 
+        maxSnack={3}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        autoHideDuration={3000}
+      >
+        <App />
+      </SnackbarProvider>
     </ThemeProvider>
-  </React.StrictMode>
+  </QueryClientProvider>
 );
-
