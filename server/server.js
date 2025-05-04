@@ -1,10 +1,14 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const courseRoutes = require('./routes/courses');
-const hometaskRoutes = require('./routes/hometasks');
-const dashboardRoutes = require('./routes/dashboard');
+import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
+import mongoose from 'mongoose';
+const {connection} = mongoose;
+import cors from 'cors';
+import courseRoutes from './routes/courses.js';
+import hometaskRoutes from './routes/hometasks.js';
+import dashboardRoutes from './routes/dashboard.js';
+import connectDB from './config/db.js';
 
 // Initialize Express
 const app = express();
@@ -12,9 +16,6 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Database Connection
-const connectDB = require('./config/db');
 
 // Start server only after DB connection
 const startServer = async () => {
@@ -29,7 +30,7 @@ const startServer = async () => {
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      console.log(`MongoDB connected: ${mongoose.connection.host}`);
+      console.log(`MongoDB connected: ${connection.host}`);
     });
   } catch (err) {
     console.error('Failed to start server:', err.message);
