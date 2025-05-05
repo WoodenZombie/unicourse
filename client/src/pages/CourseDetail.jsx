@@ -13,6 +13,7 @@ import {
   IconButton
 } from '@mui/material';
 import { ArrowBack, Edit, Delete, Add } from '@mui/icons-material';
+import { useSnackbar } from 'notistack';
 import AddHometaskModal from '../components/AddHometaskModal';
 import HometaskList from '../components/HometaskList';
 import EditCourseModal from '../components/EditCourseModal';
@@ -20,6 +21,8 @@ import api from '../services/api';
 import dayjs from 'dayjs';
 
 export default function CourseDetail() {
+  const { enqueueSnackbar } = useSnackbar();
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
@@ -37,72 +40,106 @@ export default function CourseDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // First validate the ID
+        if (!id || id.length !== 24) { // MongoDB IDs are 24 chars long
+          throw new Error('Invalid course ID format');
+        }
+  
         setLoading(true);
-        const [courseData, tasksData] = await Promise.all([
+        setError(null);
+        
+        const [courseResponse, tasksResponse] = await Promise.all([
           api.getCourse(id),
           api.getCourseHometasks(id)
         ]);
-        setCourse(courseData);
-        setHometasks(tasksData);
+  
+        if (!courseResponse.success || !tasksResponse.success) {
+          throw new Error(
+            courseResponse.message || tasksResponse.message || 'Failed to fetch course data'
+          );
+        }
+  
+        setCourse(courseResponse.data || null);
+        setHometasks(tasksResponse.data || []);
+        
       } catch (err) {
-        setError('Failed to fetch course data');
+        setError(err.message);
         console.error('Course fetch error:', err);
-        showSnackbar('Failed to load course data', 'error');
-        navigate('/dashboard');
+        enqueueSnackbar(err.message || 'Failed to load course data', { variant: 'error' });
+        navigate('/dashboard'); // Redirect to dashboard if error occurs
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [id, navigate]);
+  }, [id, navigate, enqueueSnackbar]);
 
   const handleTaskComplete = async (taskId) => {
     try {
-      const updatedTask = await api.markAsCompleted(taskId);
-      setHometasks(hometasks.map(task => 
-        task._id === taskId ? updatedTask : task
-      ));
-      showSnackbar('Task marked as completed!');
+      const response = await api.markAsCompleted(taskId);
+      if (response.success) {
+        setHometasks(prev => 
+          prev.map(task => 
+            task._id === taskId ? response.data : task
+          )
+        );
+        showSnackbar('Task marked as completed!');
+      } else {
+        throw new Error(response.message);
+      }
     } catch (err) {
-      showSnackbar('Failed to complete task', 'error');
+      showSnackbar(err.message || 'Failed to complete task', 'error');
       console.error('Task completion error:', err);
     }
   };
 
   const handleAddTask = async (taskData) => {
     try {
-      const newTask = await api.createHometask({
+      const response = await api.createHometask({
         ...taskData,
         courseId: id
       });
-      setHometasks([...hometasks, newTask]);
-      setOpenAddTask(false);
-      showSnackbar('Hometask added successfully!');
+      
+      if (response.success) {
+        setHometasks(prev => [...prev, response.data]);
+        setOpenAddTask(false);
+        showSnackbar('Hometask added successfully!');
+      } else {
+        throw new Error(response.message);
+      }
     } catch (err) {
-      showSnackbar('Failed to add hometask', 'error');
+      showSnackbar(err.message || 'Failed to add hometask', 'error');
       console.error('Hometask creation error:', err);
     }
   };
 
   const handleUpdateCourse = async (courseData) => {
     try {
-      const updatedCourse = await api.updateCourse(id, courseData);
-      setCourse(updatedCourse);
-      setOpenEditCourse(false);
-      showSnackbar('Course updated successfully!');
+      const response = await api.updateCourse(id, courseData);
+      if (response.success) {
+        setCourse(response.data);
+        setOpenEditCourse(false);
+        showSnackbar('Course updated successfully!');
+      } else {
+        throw new Error(response.message);
+      }
     } catch (err) {
-      showSnackbar('Failed to update course', 'error');
+      showSnackbar(err.message || 'Failed to update course', 'error');
       console.error('Course update error:', err);
     }
   };
 
   const handleDeleteCourse = async () => {
     try {
-      await api.deleteCourse(id);
-      showSnackbar('Course deleted successfully!');
-      navigate('/dashboard');
+      const response = await api.deleteCourse(id);
+      if (response.success) {
+        showSnackbar('Course deleted successfully!');
+        navigate('/dashboard');
+      } else {
+        throw new Error(response.message);
+      }
     } catch (err) {
-      showSnackbar('Failed to delete course', 'error');
+      showSnackbar(err.message || 'Failed to delete course', 'error');
       console.error('Course deletion error:', err);
     }
   };
@@ -117,16 +154,18 @@ export default function CourseDetail() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" mt={5}>
-        <CircularProgress />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress size={60} />
       </Box>
     );
   }
 
-  if (error) {
+  if (error || !course) {
     return (
       <Container maxWidth="md" sx={{ py: 3 }}>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error || 'Course not found'}
+        </Alert>
         <Button 
           variant="outlined" 
           sx={{ mt: 2 }}
@@ -187,7 +226,7 @@ export default function CourseDetail() {
 
       <Divider sx={{ my: 3 }} />
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">
           Hometasks ({hometasks.length})
         </Typography>
@@ -195,15 +234,30 @@ export default function CourseDetail() {
           variant="contained"
           onClick={() => setOpenAddTask(true)}
           startIcon={<Add />}
+          size="small"
         >
-          Add Hometask
+          New Task
         </Button>
       </Box>
 
-      <HometaskList 
-        hometasks={hometasks} 
-        onTaskComplete={handleTaskComplete}
-      />
+      {hometasks.length > 0 ? (
+        <HometaskList 
+          hometasks={hometasks} 
+          onTaskComplete={handleTaskComplete}
+        />
+      ) : (
+        <Box sx={{ 
+          textAlign: 'center', 
+          p: 4,
+          border: '1px dashed',
+          borderColor: 'divider',
+          borderRadius: 1
+        }}>
+          <Typography variant="body1" color="text.secondary">
+            No hometasks yet. Add your first task!
+          </Typography>
+        </Box>
+      )}
 
       <AddHometaskModal 
         open={openAddTask} 
@@ -222,11 +276,13 @@ export default function CourseDetail() {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert 
           onClose={handleCloseSnackbar} 
           severity={snackbar.severity}
           sx={{ width: '100%' }}
+          variant="filled"
         >
           {snackbar.message}
         </Alert>

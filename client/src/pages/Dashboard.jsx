@@ -30,15 +30,24 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [coursesData, hometasksData] = await Promise.all([
+        const [coursesResponse, hometasksResponse] = await Promise.all([
           api.getAllCourses(),
           api.getAllHometasks()
         ]);
         
-        setCourses(coursesData);
-        setHometasks(hometasksData);
+        if (coursesResponse.success) {
+          setCourses(coursesResponse.data || []);
+        } else {
+          throw new Error(coursesResponse.message || 'Failed to fetch courses');
+        }
+
+        if (hometasksResponse.success) {
+          setHometasks(hometasksResponse.data || []);
+        } else {
+          throw new Error(hometasksResponse.message || 'Failed to fetch hometasks');
+        }
       } catch (err) {
-        setError('Failed to fetch dashboard data');
+        setError(err.message || 'Failed to fetch dashboard data');
         console.error('Dashboard fetch error:', err);
       } finally {
         setLoading(false);
@@ -49,36 +58,57 @@ export default function Dashboard() {
 
   const handleTaskComplete = async (taskId) => {
     try {
-      const updatedTask = await api.markAsCompleted(taskId);
-      setHometasks(hometasks.map(task => 
-        task._id === taskId ? updatedTask : task
-      ));
-      showSnackbar('Task marked as completed!');
+      const response = await api.markAsCompleted(taskId);
+      if (response.success) {
+        setHometasks(prevTasks => 
+          prevTasks.map(task => 
+            task._id === taskId ? response.data : task
+          )
+        );
+        showSnackbar('Task marked as completed!');
+      } else {
+        throw new Error(response.message || 'Failed to complete task');
+      }
     } catch (err) {
-      showSnackbar('Failed to complete task', 'error');
+      showSnackbar(err.message || 'Failed to complete task', 'error');
       console.error('Task completion error:', err);
     }
   };
 
-  const handleAddCourse = async (courseData) => {
+  const handleAddCourse = async (newCourse) => {
     try {
-      const newCourse = await api.createCourse(courseData);
-      setCourses([...courses, newCourse]);
-      setOpenAddCourse(false);
-      showSnackbar('Course added successfully!');
+      const response = await api.createCourse({
+        name: newCourse.name,
+        professor: newCourse.professor,
+        schedule: newCourse.schedule,
+        credits: Number(newCourse.credits),
+        description: newCourse.description
+      });
+
+      if (response.success) {
+        setCourses(prev => [...prev, response.data]);
+        showSnackbar('Course added successfully!');
+        setOpenAddCourse(false);
+      } else {
+        throw new Error(response.message || 'Failed to add course');
+      }
     } catch (err) {
-      showSnackbar('Failed to add course', 'error');
+      showSnackbar(err.message || 'Failed to add course', 'error');
       console.error('Course creation error:', err);
     }
   };
 
   const handleDeleteCourse = async (courseId) => {
     try {
-      await api.deleteCourse(courseId);
-      setCourses(courses.filter(course => course._id !== courseId));
-      showSnackbar('Course deleted successfully!');
+      const response = await api.deleteCourse(courseId);
+      if (response.success) {
+        setCourses(prevCourses => prevCourses.filter(course => course._id !== courseId));
+        showSnackbar('Course deleted successfully!');
+      } else {
+        throw new Error(response.message || 'Failed to delete course');
+      }
     } catch (err) {
-      showSnackbar('Failed to delete course', 'error');
+      showSnackbar(err.message || 'Failed to delete course', 'error');
       console.error('Course deletion error:', err);
     }
   };
@@ -93,8 +123,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" mt={5}>
-        <CircularProgress />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress size={60} />
       </Box>
     );
   }
@@ -102,14 +132,24 @@ export default function Dashboard() {
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ py: 3 }}>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => window.location.reload()}
+        >
+          Retry
+        </Button>
       </Container>
     );
   }
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Typography variant="h4" gutterBottom>My Courses</Typography>
+      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+        My Courses
+      </Typography>
       
       <Button 
         variant="contained" 
@@ -121,21 +161,40 @@ export default function Dashboard() {
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
+          <Typography variant="h6" gutterBottom>
+            Your Courses ({courses.length})
+          </Typography>
           {courses.length > 0 ? (
             courses.map(course => (
               <CourseCard 
                 key={course._id} 
                 course={course} 
-                hometasks={hometasks.filter(t => t.courseId === course._id)}
+                hometasks={hometasks.filter(t => {
+                  const taskCourseId = t.courseId?._id || t.courseId;
+                  return taskCourseId?.toString() === course._id?.toString();
+                })}
                 onDelete={handleDeleteCourse}
               />
             ))
           ) : (
-            <Typography variant="body1">No courses yet. Add your first course!</Typography>
+            <Box sx={{ 
+              textAlign: 'center', 
+              p: 4,
+              border: '1px dashed',
+              borderColor: 'divider',
+              borderRadius: 1
+            }}>
+              <Typography variant="body1" color="text.secondary">
+                No courses yet. Add your first course!
+              </Typography>
+            </Box>
           )}
         </Grid>
         
         <Grid item xs={12} md={6}>
+          <Typography variant="h6" gutterBottom>
+            Your Tasks
+          </Typography>
           <HometaskList 
             hometasks={hometasks} 
             courses={courses}
@@ -147,18 +206,20 @@ export default function Dashboard() {
       <AddCourseModal 
         open={openAddCourse} 
         onClose={() => setOpenAddCourse(false)}
-        onSubmit={handleAddCourse}
+        onCourseAdded={handleAddCourse}
       />
 
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert 
           onClose={handleCloseSnackbar} 
           severity={snackbar.severity}
           sx={{ width: '100%' }}
+          variant="filled"
         >
           {snackbar.message}
         </Alert>

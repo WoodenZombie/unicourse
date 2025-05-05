@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { 
   Dialog, 
   DialogTitle, 
@@ -9,11 +10,12 @@ import {
   Alert,
   Stack,
   Typography,
-  InputAdornment
+  InputAdornment,
+  CircularProgress
 } from '@mui/material';
-import api from '../services/api';
 import { useSnackbar } from 'notistack';
 import { Schedule, School, Person } from '@mui/icons-material';
+import api from '../services/api';
 
 export default function AddCourseModal({ open, onClose, onCourseAdded }) {
   const [form, setForm] = useState({
@@ -43,17 +45,28 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
     
     setIsSubmitting(true);
     try {
-      const newCourse = await api.createCourse({
-        ...form,
-        credits: Number(form.credits)
+      const response = await api.createCourse({
+        name: form.name,
+        professor: form.professor,
+        schedule: form.schedule,
+        credits: Number(form.credits),
+        description: form.description
       });
-      onCourseAdded(newCourse);
-      enqueueSnackbar('Course added successfully!', { variant: 'success' });
-      handleClose();
+
+      if (response.success) {
+        if (typeof onCourseAdded === 'function') {
+          onCourseAdded(response.data);
+        }
+        enqueueSnackbar('Course added successfully!', { variant: 'success' });
+        handleClose();
+      } else {
+        throw new Error(response.message || 'Failed to add course');
+      }
     } catch (err) {
       console.error('Failed to create course:', err);
-      enqueueSnackbar(err.response?.data?.message || 'Failed to add course', { 
-        variant: 'error' 
+      enqueueSnackbar(err.message || 'Failed to add course', { 
+        variant: 'error',
+        autoHideDuration: 3000
       });
     } finally {
       setIsSubmitting(false);
@@ -69,7 +82,6 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -127,12 +139,12 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
           
           <TextField
             name="schedule"
-            label="Schedule (e.g. Mon/Wed 10:00-11:30)"
+            label="Schedule"
             fullWidth
             value={form.schedule}
             onChange={handleChange}
             error={!!errors.schedule}
-            helperText={errors.schedule || "Example format: Mon/Wed 10:00-11:30"}
+            helperText={errors.schedule || "Example: Mon/Wed 10:00-11:30"}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -181,8 +193,9 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
         <Button 
           onClick={handleSubmit} 
           variant="contained"
-          disabled={isSubmitting || !form.name || !form.professor || !form.schedule}
+          disabled={isSubmitting}
           sx={{ minWidth: 120 }}
+          endIcon={isSubmitting ? <CircularProgress size={20} /> : null}
         >
           {isSubmitting ? 'Adding...' : 'Add Course'}
         </Button>
@@ -190,3 +203,13 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
     </Dialog>
   );
 }
+
+AddCourseModal.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onCourseAdded: PropTypes.func
+};
+
+AddCourseModal.defaultProps = {
+  onCourseAdded: () => {}
+};

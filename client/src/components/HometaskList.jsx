@@ -32,7 +32,7 @@ export default function HometaskList({ hometasks, onTaskComplete, onEdit, onDele
   const theme = useTheme();
   const navigate = useNavigate();
 
-  // Safely handle hometasks prop - ensure it's always an array
+  // Safely handle hometasks and courses props
   const safeHometasks = Array.isArray(hometasks) ? hometasks : [];
   const safeCourses = Array.isArray(courses) ? courses : [];
 
@@ -45,10 +45,19 @@ export default function HometaskList({ hometasks, onTaskComplete, onEdit, onDele
   );
   const completedTasks = safeHometasks.filter(task => task?.status === 'completed');
 
+  // Handle both string and object course references
   const getCourseName = (courseId) => {
     if (!courseId) return 'Unknown Course';
-    const course = safeCourses.find(c => c?._id === courseId);
+    
+    // Handle both populated and non-populated course references
+    const actualCourseId = courseId._id || courseId;
+    const course = safeCourses.find(c => c?._id?.toString() === actualCourseId?.toString());
     return course?.name || 'Unknown Course';
+  };
+
+  const getCourseId = (courseId) => {
+    if (!courseId) return null;
+    return courseId._id || courseId;
   };
 
   const renderTaskGroup = (tasks, title, color) => {
@@ -69,85 +78,95 @@ export default function HometaskList({ hometasks, onTaskComplete, onEdit, onDele
           {title} ({tasks.length})
         </Typography>
         <List sx={{ py: 0 }}>
-          {tasks.map(task => (
-            <ListItem 
-              key={task?._id || Math.random()} 
-              sx={{ 
-                bgcolor: task?.status === 'completed' ? 'action.hover' : 'background.paper',
-                borderRadius: 1,
-                mb: 1,
-                boxShadow: 1
-              }}
-              secondaryAction={
-                <Stack direction="row" spacing={1}>
-                  {onTaskComplete && task?.status !== 'completed' && (
-                    <Tooltip title="Mark as completed">
-                      <IconButton onClick={() => task?._id && onTaskComplete(task._id)}>
-                        <CheckCircle color="success" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  {onEdit && (
-                    <Tooltip title="Edit task">
-                      <IconButton onClick={() => onEdit(task)}>
-                        <Edit color="primary" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                  {onDelete && (
-                    <Tooltip title="Delete task">
-                      <IconButton onClick={() => task?._id && onDelete(task._id)}>
-                        <Delete color="error" />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                </Stack>
-              }
-            >
-              <Avatar sx={{ 
-                bgcolor: 'primary.main',
-                mr: 2,
-                width: 40,
-                height: 40
-              }}>
-                <Assignment />
-              </Avatar>
-              <ListItemText
-                primary={
-                  <Typography fontWeight="medium">
-                    {task?.description || 'No description'}
-                  </Typography>
-                }
-                secondary={
-                  <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
-                    {task?.deadline && (
-                      <Chip 
-                        icon={<Schedule />}
-                        label={dayjs(task.deadline).format('MMM D, YYYY h:mm A')}
-                        size="small"
-                        color={dayjs(task.deadline).isBefore(dayjs()) ? 'error' : 'default'}
-                      />
+          {tasks.map(task => {
+            const taskId = task?._id?.toString();
+            if (!taskId) return null;
+
+            return (
+              <ListItem 
+                key={taskId}
+                sx={{ 
+                  bgcolor: task?.status === 'completed' ? 'action.hover' : 'background.paper',
+                  borderRadius: 1,
+                  mb: 1,
+                  boxShadow: 1
+                }}
+                secondaryAction={
+                  <Stack direction="row" spacing={1}>
+                    {onTaskComplete && task?.status !== 'completed' && (
+                      <Tooltip title="Mark as completed">
+                        <IconButton onClick={() => onTaskComplete(taskId)}>
+                          <CheckCircle color="success" />
+                        </IconButton>
+                      </Tooltip>
                     )}
-                    {task?.courseId && (
-                      <Chip 
-                        label={getCourseName(task.courseId)}
-                        size="small"
-                        variant="outlined"
-                      />
+                    {onEdit && (
+                      <Tooltip title="Edit task">
+                        <IconButton onClick={() => onEdit(task)}>
+                          <Edit color="primary" />
+                        </IconButton>
+                      </Tooltip>
                     )}
-                    {task?.status === 'completed' && (
-                      <Chip 
-                        icon={<CheckCircle />}
-                        label="Completed"
-                        color="success"
-                        size="small"
-                      />
+                    {onDelete && (
+                      <Tooltip title="Delete task">
+                        <IconButton onClick={() => onDelete(taskId)}>
+                          <Delete color="error" />
+                        </IconButton>
+                      </Tooltip>
                     )}
                   </Stack>
                 }
-              />
-            </ListItem>
-          ))}
+              >
+                <Avatar sx={{ 
+                  bgcolor: 'primary.main',
+                  mr: 2,
+                  width: 40,
+                  height: 40
+                }}>
+                  <Assignment />
+                </Avatar>
+                <ListItemText
+                  primary={
+                    <Typography fontWeight="medium">
+                      {task?.description || 'No description'}
+                    </Typography>
+                  }
+                  secondary={
+                    <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                      {task?.deadline && (
+                        <Chip 
+                          icon={<Schedule />}
+                          label={dayjs(task.deadline).format('MMM D, YYYY h:mm A')}
+                          size="small"
+                          color={dayjs(task.deadline).isBefore(dayjs()) ? 'error' : 'default'}
+                        />
+                      )}
+                      {task?.courseId && (
+                        <Chip 
+                          label={getCourseName(task.courseId)}
+                          size="small"
+                          variant="outlined"
+                          onClick={() => {
+                            const courseId = getCourseId(task.courseId);
+                            if (courseId) navigate(`/courses/${courseId}`);
+                          }}
+                          sx={{ cursor: 'pointer' }}
+                        />
+                      )}
+                      {task?.status === 'completed' && (
+                        <Chip 
+                          icon={<CheckCircle />}
+                          label="Completed"
+                          color="success"
+                          size="small"
+                        />
+                      )}
+                    </Stack>
+                  }
+                />
+              </ListItem>
+            );
+          })}
         </List>
       </Box>
     );

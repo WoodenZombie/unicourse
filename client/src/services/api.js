@@ -4,28 +4,42 @@ const api = axios.create({
   baseURL: 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 10000
 });
 
-// enhanced error handling wrapper
 const handleRequest = async (request) => {
   try {
     const response = await request;
-    return response.data;
+    return {
+      success: true,
+      data: response.data.data || response.data,
+      status: response.status
+    };
   } catch (error) {
-    console.error('API Error:', {
-      message: error.message,
-      response: error.response?.data,
-      config: error.config
-    });
-    throw error.response?.data || { 
-      message: error.message || 'API request failed',
-      status: error.response?.status
+    if (error.response) {
+      return {
+        success: false,
+        message: error.response.data.message || 'Request failed',
+        code: error.response.data.code,
+        status: error.response.status,
+        data: error.response.data
+      };
+    } else if (error.request) {
+      return {
+        success: false,
+        message: 'No response from server',
+        status: 503
+      };
+    }
+    return {
+      success: false,
+      message: error.message || 'Request failed',
+      status: 400
     };
   }
 };
 
-// helper function to validate IDs
 const validateId = (id) => {
   if (!id || typeof id !== 'string') {
     throw new Error(`Invalid ID: ${id}`);
@@ -33,7 +47,7 @@ const validateId = (id) => {
   return id;
 };
 
-export default {
+const apiService = {
   // Dashboard
   getDashboard: () => handleRequest(api.get('/dashboard')),
   
@@ -77,6 +91,8 @@ export default {
     return handleRequest(api.delete(`/hometasks/${hometaskId}`));
   },
 
-  // test endpoint
-  testConnection: () => handleRequest(api.get('/health'))
+  // Health check
+  checkHealth: () => handleRequest(api.get('/health'))
 };
+
+export default apiService;

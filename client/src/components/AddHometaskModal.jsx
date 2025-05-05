@@ -10,9 +10,11 @@ import {
   Stack,
   Typography,
   InputAdornment,
-  CircularProgress
+  CircularProgress,
+  Box,
+  IconButton
 } from '@mui/material';
-import { Assignment, CalendarToday } from '@mui/icons-material';
+import { Assignment, CalendarToday, Close} from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import dayjs from 'dayjs';
 import api from '../services/api';
@@ -20,7 +22,7 @@ import api from '../services/api';
 export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded }) {
   const [form, setForm] = useState({
     description: '',
-    deadline: dayjs().add(1, 'day').format('YYYY-MM-DDTHH:mm') // Default to tomorrow
+    deadline: dayjs().add(1, 'day').format('YYYY-MM-DDTHH:mm')
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,20 +45,28 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
     
     setIsSubmitting(true);
     try {
-      const newTask = await api.createHometask({
+      const response = await api.createHometask({
         courseId,
         description: form.description,
         deadline: form.deadline,
         status: 'pending'
       });
       
-      onTaskAdded(newTask);
-      enqueueSnackbar('Hometask added successfully!', { variant: 'success' });
-      handleClose();
+      if (response.success) {
+        onTaskAdded(response.data);
+        enqueueSnackbar('Hometask added successfully!', { 
+          variant: 'success',
+          anchorOrigin: { vertical: 'top', horizontal: 'right' }
+        });
+        handleClose();
+      } else {
+        throw new Error(response.message || 'Failed to add hometask');
+      }
     } catch (err) {
       console.error('Failed to create hometask:', err);
-      enqueueSnackbar(err.response?.data?.message || 'Failed to add hometask', { 
-        variant: 'error' 
+      enqueueSnackbar(err.message || 'Failed to add hometask', { 
+        variant: 'error',
+        anchorOrigin: { vertical: 'top', horizontal: 'right' }
       });
     } finally {
       setIsSubmitting(false);
@@ -66,7 +76,6 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -82,17 +91,33 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      fullWidth 
+      maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: 24
+        }
+      }}
+    >
       <DialogTitle>
-        <Typography variant="h6" fontWeight="bold">
-          Add New Hometask
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6" fontWeight="bold">
+            Create New Hometask
+          </Typography>
+          <IconButton onClick={handleClose} size="small">
+            <Close />
+          </IconButton>
+        </Box>
       </DialogTitle>
       
-      <DialogContent dividers>
-        <Stack spacing={3} sx={{ pt: 1 }}>
+      <DialogContent dividers sx={{ py: 3 }}>
+        <Stack spacing={3}>
           {Object.keys(errors).length > 0 && (
-            <Alert severity="error">
+            <Alert severity="error" sx={{ mb: 2 }}>
               Please fix the errors in the form
             </Alert>
           )}
@@ -103,6 +128,7 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
             fullWidth
             multiline
             rows={4}
+            variant="outlined"
             value={form.description}
             onChange={handleChange}
             error={!!errors.description}
@@ -114,6 +140,11 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
                 </InputAdornment>
               ),
             }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              }
+            }}
           />
           
           <TextField
@@ -121,6 +152,7 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
             label="Deadline"
             type="datetime-local"
             fullWidth
+            variant="outlined"
             InputLabelProps={{ shrink: true }}
             value={form.deadline}
             onChange={handleChange}
@@ -136,15 +168,25 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
                 </InputAdornment>
               ),
             }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              }
+            }}
           />
         </Stack>
       </DialogContent>
       
-      <DialogActions sx={{ p: 3 }}>
+      <DialogActions sx={{ p: 3, pt: 0 }}>
         <Button 
           onClick={handleClose} 
           color="inherit"
           disabled={isSubmitting}
+          sx={{ 
+            borderRadius: 2,
+            px: 3,
+            py: 1
+          }}
         >
           Cancel
         </Button>
@@ -152,10 +194,15 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
           onClick={handleSubmit} 
           variant="contained"
           disabled={isSubmitting || !form.description || !form.deadline}
-          sx={{ minWidth: 120 }}
-          endIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+          sx={{ 
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            minWidth: 150
+          }}
+          endIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          {isSubmitting ? 'Adding...' : 'Add Hometask'}
+          {isSubmitting ? 'Creating...' : 'Create Hometask'}
         </Button>
       </DialogActions>
     </Dialog>
