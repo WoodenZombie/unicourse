@@ -70,7 +70,6 @@ CourseSchema.virtual('pendingHometasks', {
 // indexes for better query performance
 CourseSchema.index({ name: 1 });
 CourseSchema.index({ professor: 1 });
-CourseSchema.index({ code: 1 }, { unique: true });
 CourseSchema.index({ credits: 1 });
 
 export default model('Course', CourseSchema);

@@ -22,13 +22,25 @@ export const validateCreateCourse = (courseData) => {
       errors
     };
   };
-  
+
   export const validateId = (id) => {
-    if (!id || typeof id !== 'string' || id.length !== 24) {
+    // Allow only strings
+    if (typeof id !== 'string') {
       return {
         isValid: false,
-        error: 'Invalid ID format'
+        error: 'ID must be a string',
       };
     }
+  
+    // Check for 24-character hex string
+    const isValid = /^[a-fA-F0-9]{24}$/.test(id);
+  
+    if (!isValid) {
+      return {
+        isValid: false,
+        error: 'Invalid ID format',
+      };
+    }
+  
     return { isValid: true };
   };

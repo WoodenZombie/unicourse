@@ -41,10 +41,22 @@ const handleRequest = async (request) => {
 };
 
 const validateId = (id) => {
-  if (!id || typeof id !== 'string') {
-    throw new Error(`Invalid ID: ${id}`);
+  // Handle MongoDB ObjectId
+  if (id && typeof id === 'object' && id.toString) {
+    return id.toString();
   }
-  return id;
+  
+  // Handle string/number IDs
+  if (id === undefined || id === null) {
+    throw new Error('ID is required');
+  }
+  
+  const stringId = String(id).trim();
+  if (!stringId) {
+    throw new Error('ID cannot be empty');
+  }
+  
+  return stringId;
 };
 
 const apiService = {
@@ -53,41 +65,45 @@ const apiService = {
   
   // Courses
   getAllCourses: () => handleRequest(api.get('/courses')),
-  createCourse: (courseData) => handleRequest(api.post('/courses', courseData)),
+  createCourse: async (courseData) => {
+    return handleRequest(api.post(`/courses`));
+  },
   getCourse: (courseId) => {
     validateId(courseId);
     return handleRequest(api.get(`/courses/${courseId}`));
   },
   updateCourse: (courseId, courseData) => {
     validateId(courseId);
-    return handleRequest(api.put(`/courses/${courseId}`, courseData));
+    return handleRequest(api.post(`/courses/${courseId}`, courseData));
   },
   deleteCourse: (courseId) => {
     validateId(courseId);
     return handleRequest(api.delete(`/courses/${courseId}`));
   },
   getCourseHometasks: (courseId) => {
-    validateId(courseId);
+    const id = validateId(courseId);
     return handleRequest(api.get(`/courses/${courseId}/hometasks`));
   },
   
   // Hometasks
   getAllHometasks: () => handleRequest(api.get('/hometasks')),
-  createHometask: (taskData) => handleRequest(api.post('/hometasks', taskData)),
+  createHometask: (taskData) => {
+    console.log('Submitting hometask:', {taskData});
+    return handleRequest(api.post('/hometasks', taskData))},
   getHometask: (hometaskId) => {
-    validateId(hometaskId);
+    const id = validateId(hometaskId);
     return handleRequest(api.get(`/hometasks/${hometaskId}`));
   },
   updateHometask: (hometaskId, taskData) => {
-    validateId(hometaskId);
+    const id = validateId(hometaskId);
     return handleRequest(api.put(`/hometasks/${hometaskId}`, taskData));
   },
   markAsCompleted: (hometaskId) => {
-    validateId(hometaskId);
+    const id = validateId(hometaskId);
     return handleRequest(api.patch(`/hometasks/${hometaskId}/complete`));
   },
   deleteHometask: (hometaskId) => {
-    validateId(hometaskId);
+    const id = validateId(hometaskId);
     return handleRequest(api.delete(`/hometasks/${hometaskId}`));
   },
 

@@ -6,6 +6,7 @@ import theme from './theme.js';
 import Layout from './components/Layout.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import CourseDetail from './pages/CourseDetail.jsx';
+import CoursesPage from './pages/CoursesPage.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/courses/:id" element={<CourseDetail />} />
+                <Route path="/courses/all" element={<CoursesPage />} />
               </Route>
               
               {/* fallback routes */}

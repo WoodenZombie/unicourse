@@ -93,24 +93,9 @@ export default function CourseDetail() {
     }
   };
 
-  const handleAddTask = async (taskData) => {
-    try {
-      const response = await api.createHometask({
-        ...taskData,
-        courseId: id
-      });
-      
-      if (response.success) {
-        setHometasks(prev => [...prev, response.data]);
-        setOpenAddTask(false);
-        showSnackbar('Hometask added successfully!');
-      } else {
-        throw new Error(response.message);
-      }
-    } catch (err) {
-      showSnackbar(err.message || 'Failed to add hometask', 'error');
-      console.error('Hometask creation error:', err);
-    }
+  const handleAddTask = (newTask) => {
+    setHometasks(prev => [...prev, newTask]);
+    setOpenAddTask(false);
   };
 
   const handleUpdateCourse = async (courseData) => {
@@ -263,6 +248,7 @@ export default function CourseDetail() {
         open={openAddTask} 
         onClose={() => setOpenAddTask(false)}
         onSubmit={handleAddTask}
+        courseId={id} 
       />
 
       <EditCourseModal

@@ -174,9 +174,6 @@ export default function HometaskList({ hometasks, onTaskComplete, onEdit, onDele
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        Hometasks
-      </Typography>
 
       {renderTaskGroup(overdueTasks, 'Overdue', theme.palette.error.main)}
       {renderTaskGroup(upcomingTasks, 'Upcoming', theme.palette.warning.main)}

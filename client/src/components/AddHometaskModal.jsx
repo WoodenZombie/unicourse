@@ -19,7 +19,7 @@ import { useSnackbar } from 'notistack';
 import dayjs from 'dayjs';
 import api from '../services/api';
 
-export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded }) {
+export default function AddHometaskModal({ open, onClose, courseId, onSubmit }) {
   const [form, setForm] = useState({
     description: '',
     deadline: dayjs().add(1, 'day').format('YYYY-MM-DDTHH:mm')
@@ -53,7 +53,7 @@ export default function AddHometaskModal({ open, onClose, courseId, onTaskAdded 
       });
       
       if (response.success) {
-        onTaskAdded(response.data);
+        onSubmit(response.data);
         enqueueSnackbar('Hometask added successfully!', { 
           variant: 'success',
           anchorOrigin: { vertical: 'top', horizontal: 'right' }

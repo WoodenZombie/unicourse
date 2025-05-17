@@ -12,6 +12,7 @@ import {
 import CourseCard from '../components/CourseCard';
 import HometaskList from '../components/HometaskList';
 import AddCourseModal from '../components/AddCourseModal';
+import CreateHometaskButton from '../components/CreateHometaskButton';
 import api from '../services/api';
 
 export default function Dashboard() {
@@ -148,16 +149,8 @@ export default function Dashboard() {
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        My Courses
+        Dashboard
       </Typography>
-      
-      <Button 
-        variant="contained" 
-        onClick={() => setOpenAddCourse(true)}
-        sx={{ mb: 3 }}
-      >
-        Add New Course
-      </Button>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
@@ -189,6 +182,14 @@ export default function Dashboard() {
               </Typography>
             </Box>
           )}
+
+<Button 
+        variant="contained" 
+        onClick={() => setOpenAddCourse(true)}
+        sx={{ mb: 3 }}
+      >
+        Add New Course
+      </Button>
         </Grid>
         
         <Grid item xs={12} md={6}>
@@ -200,6 +201,7 @@ export default function Dashboard() {
             courses={courses}
             onTaskComplete={handleTaskComplete}
           />
+           <CreateHometaskButton courses={courses} />
         </Grid>
       </Grid>
 
