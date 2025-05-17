@@ -1,14 +1,32 @@
-import { AppBar as MuiAppBar, Toolbar, Typography, Button, IconButton } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { 
+  AppBar as MuiAppBar, 
+  Toolbar, 
+  Button,
+  IconButton 
+} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import { useNavigate } from 'react-router-dom';
+import HomeIcon from '@mui/icons-material/Home';
 
 export default function AppBar({ toggleSidebar }) {
+  const navigate = useNavigate();
+
   return (
     <MuiAppBar position="fixed">
       <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <Button
+          color="inherit"
+          onClick={() => navigate('/')}
+          sx={{
+            flexGrow: 1,
+            justifyContent: 'flex-start',
+            textTransform: 'none',
+            fontSize: '1.25rem',
+            fontWeight: 'bold'
+          }}
+        >
           UniCourse
-        </Typography>
+        </Button>
         <IconButton
           color="inherit"
           edge="end"

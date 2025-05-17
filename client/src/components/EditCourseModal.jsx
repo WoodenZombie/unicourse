@@ -122,34 +122,105 @@ export default function EditCourseModal({ open, onClose, course, onSubmit }) {
       
       {/* Rest of your dialog content remains the same */}
       <DialogContent dividers>
-        <Stack spacing={3} sx={{ pt: 2 }}>
-          {Object.keys(errors).length > 0 && (
-            <Alert severity="error">
-              Please fix the errors in the form
-            </Alert>
-          )}
-          
-          <TextField
-            name="name"
-            label="Course Name"
-            fullWidth
-            value={form.name}
-            onChange={handleChange}
-            error={!!errors.name}
-            helperText={errors.name}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <School color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          {/* Other form fields remain the same */}
-          
-        </Stack>
-      </DialogContent>
+  <Stack spacing={3} sx={{ pt: 2 }}>
+    {Object.keys(errors).length > 0 && (
+      <Alert severity="error">
+        Please fix the errors in the form
+      </Alert>
+    )}
+    
+    <TextField
+      name="name"
+      label="Course Name"
+      fullWidth
+      value={form.name}
+      onChange={handleChange}
+      error={!!errors.name}
+      helperText={errors.name}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <School color="action" />
+          </InputAdornment>
+        ),
+      }}
+    />
+    
+    <TextField
+      name="professor"
+      label="Professor"
+      fullWidth
+      value={form.professor}
+      onChange={handleChange}
+      error={!!errors.professor}
+      helperText={errors.professor}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Person color="action" />
+          </InputAdornment>
+        ),
+      }}
+    />
+    
+    <TextField
+      name="schedule"
+      label="Schedule"
+      fullWidth
+      value={form.schedule}
+      onChange={handleChange}
+      error={!!errors.schedule}
+      helperText={errors.schedule || "Example: Mon/Wed 10:00-11:30"}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Schedule color="action" />
+          </InputAdornment>
+        ),
+      }}
+    />
+    
+    <TextField
+      name="credits"
+      label="Credits"
+      type="number"
+      fullWidth
+      value={form.credits}
+      onChange={handleChange}
+      error={!!errors.credits}
+      helperText={errors.credits}
+      inputProps={{ 
+        min: 1, 
+        max: 10,
+        step: 1
+      }}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Star color="action" />
+          </InputAdornment>
+        ),
+      }}
+    />
+    
+    <TextField
+      name="description"
+      label="Description"
+      fullWidth
+      multiline
+      rows={4}
+      value={form.description}
+      onChange={handleChange}
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <Description color="action" />
+          </InputAdornment>
+        ),
+      }}
+    />
+  </Stack>
+</DialogContent>
       
       <DialogActions sx={{ p: 3 }}>
         <Button 

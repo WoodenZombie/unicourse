@@ -31,6 +31,8 @@ export default function CourseDetail() {
   const [error, setError] = useState(null);
   const [openAddTask, setOpenAddTask] = useState(false);
   const [openEditCourse, setOpenEditCourse] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [openEditModal, setOpenEditModal] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -92,6 +94,26 @@ export default function CourseDetail() {
       console.error('Task completion error:', err);
     }
   };
+  const handleEditTask = (task) => {
+    // Open your edit modal with the task data
+    setSelectedTask(task);
+    setOpenEditModal(true);
+  };
+  
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const response = await api.deleteHometask(taskId);
+      if (response.success) {
+        setHometasks(prev => prev.filter(t => t._id !== taskId));
+        enqueueSnackbar('Task deleted successfully!', { variant: 'success' });
+      } else {
+        throw new Error(response.message || 'Failed to delete task');
+      }
+    } catch (err) {
+      enqueueSnackbar(err.message || 'Failed to delete task', { variant: 'error' });
+    }
+  };
+  
 
   const handleAddTask = (newTask) => {
     setHometasks(prev => [...prev, newTask]);
@@ -227,8 +249,11 @@ export default function CourseDetail() {
 
       {hometasks.length > 0 ? (
         <HometaskList 
-          hometasks={hometasks} 
+          hometasks={hometasks}
+          courses={[course]} 
           onTaskComplete={handleTaskComplete}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
         />
       ) : (
         <Box sx={{ 

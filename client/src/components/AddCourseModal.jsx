@@ -40,15 +40,30 @@ export default function AddCourseModal({ open, onClose, onCourseAdded }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
     try {
-      onCourseAdded(form);
-      handleClose();
+      const response = await api.createCourse({
+        name: form.name,
+        professor: form.professor,
+        schedule: form.schedule,
+        credits: Number(form.credits),
+        description: form.description
+      });
+
+      if (response.success) {
+        // if (typeof onCourseAdded === 'function') {
+        //   onCourseAdded(response.data);
+        // }
+        enqueueSnackbar('Course added successfully!', { variant: 'success' });
+        handleClose();
+      } else {
+        throw new Error(response.message || 'Failed to add course');
+      }
     } catch (err) {
+      console.error('Failed to create course:', err);
       enqueueSnackbar(err.message || 'Failed to add course', { 
         variant: 'error',
         autoHideDuration: 3000

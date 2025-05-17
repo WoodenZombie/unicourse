@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import AppBar from './AppBar';
 import HomeIcon from '@mui/icons-material/Home';
-import AssignmentIcon from '@mui/icons-material/Assignment';
 import SchoolIcon from '@mui/icons-material/School';
 
 const drawerWidth = 240;
@@ -63,15 +62,6 @@ return (
            <HomeIcon />
          </ListItemIcon>
          <ListItemText primary="Dashboard" />
-       </ListItemButton>
-     </ListItem>
-     
-     <ListItem disablePadding>
-       <ListItemButton component={Link} to="/hometasks/all" onClick={toggleSidebar}>
-         <ListItemIcon>
-           <AssignmentIcon />
-         </ListItemIcon>
-         <ListItemText primary="Hometasks" />
        </ListItemButton>
      </ListItem>
      

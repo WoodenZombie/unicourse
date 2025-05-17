@@ -76,28 +76,28 @@ export default function Dashboard() {
     }
   };
 
-  const handleAddCourse = async (newCourse) => {
-    try {
-      const response = await api.createCourse({
-        name: newCourse.name,
-        professor: newCourse.professor,
-        schedule: newCourse.schedule,
-        credits: Number(newCourse.credits),
-        description: newCourse.description
-      });
+  // const handleAddCourse = async (newCourse) => {
+  //   try {
+  //     const response = await api.createCourse({
+  //       name: newCourse.name,
+  //       professor: newCourse.professor,
+  //       schedule: newCourse.schedule,
+  //       credits: Number(newCourse.credits),
+  //       description: newCourse.description
+  //     });
 
-      if (response.success) {
-        setCourses(prev => [...prev, response.data]);
-        showSnackbar('Course added successfully!');
-        setOpenAddCourse(false);
-      } else {
-        throw new Error(response.message || 'Failed to add course');
-      }
-    } catch (err) {
-      showSnackbar(err.message || 'Failed to add course', 'error');
-      console.error('Course creation error:', err);
-    }
-  };
+  //     if (response.success) {
+  //       setCourses(prev => [...prev, response.data]);
+  //       showSnackbar('Course added successfully!');
+  //       setOpenAddCourse(false);
+  //     } else {
+  //       throw new Error(response.message || 'Failed to add course');
+  //     }
+  //   } catch (err) {
+  //     showSnackbar(err.message || 'Failed to add course', 'error');
+  //     console.error('Course creation error:', err);
+  //   }
+  // };
 
   const handleDeleteCourse = async (courseId) => {
     try {
@@ -208,7 +208,7 @@ export default function Dashboard() {
       <AddCourseModal 
         open={openAddCourse} 
         onClose={() => setOpenAddCourse(false)}
-        onCourseAdded={handleAddCourse}
+        // onCourseAdded={handleAddCourse}
       />
 
       <Snackbar

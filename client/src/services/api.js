@@ -66,7 +66,7 @@ const apiService = {
   // Courses
   getAllCourses: () => handleRequest(api.get('/courses')),
   createCourse: async (courseData) => {
-    return handleRequest(api.post(`/courses`));
+    return handleRequest(api.post(`/courses`, courseData));
   },
   getCourse: (courseId) => {
     validateId(courseId);
@@ -81,7 +81,7 @@ const apiService = {
     return handleRequest(api.delete(`/courses/${courseId}`));
   },
   getCourseHometasks: (courseId) => {
-    const id = validateId(courseId);
+    validateId(courseId);
     return handleRequest(api.get(`/courses/${courseId}/hometasks`));
   },
   
@@ -91,19 +91,19 @@ const apiService = {
     console.log('Submitting hometask:', {taskData});
     return handleRequest(api.post('/hometasks', taskData))},
   getHometask: (hometaskId) => {
-    const id = validateId(hometaskId);
+    validateId(hometaskId);
     return handleRequest(api.get(`/hometasks/${hometaskId}`));
   },
   updateHometask: (hometaskId, taskData) => {
-    const id = validateId(hometaskId);
-    return handleRequest(api.put(`/hometasks/${hometaskId}`, taskData));
+    // validateId(hometaskId);
+    return handleRequest(api.post(`/hometasks/${hometaskId}`, taskData));
   },
   markAsCompleted: (hometaskId) => {
-    const id = validateId(hometaskId);
+    // validateId(hometaskId);
     return handleRequest(api.patch(`/hometasks/${hometaskId}/complete`));
   },
   deleteHometask: (hometaskId) => {
-    const id = validateId(hometaskId);
+    validateId(hometaskId);
     return handleRequest(api.delete(`/hometasks/${hometaskId}`));
   },
 

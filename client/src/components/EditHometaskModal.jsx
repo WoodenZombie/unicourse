@@ -19,8 +19,7 @@ import {
   TextField,
   CircularProgress,
   InputAdornment,
-  Alert,
-  MenuItem
+  Alert
 } from '@mui/material';
 import { 
   CheckCircle, 
@@ -121,15 +120,15 @@ export default function HometaskList({ hometasks, courses = [], onTaskComplete, 
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit edited task
   const handleEditSubmit = async () => {
-    console.log('Attempting to update task with ID:', selectedTask._id);
-    // console.log('Data being sent:', {
-    // ...editForm,
-    // deadline: new Date(editForm.deadline).toISOString(),
-    // courseId: selectedTask.courseId
-    // });
     if (!validateForm()) return;
+
+    console.log('Attempting to update task with ID:', selectedTask._id);
+console.log('Data being sent:', {
+  ...editForm,
+  deadline: new Date(editForm.deadline).toISOString(),
+  courseId: selectedTask.courseId
+});
     
     setIsSubmitting(true);
     try {
@@ -145,9 +144,17 @@ export default function HometaskList({ hometasks, courses = [], onTaskComplete, 
         // if (onTaskComplete) {
         //   onTaskComplete(); // Refresh the task list
         // }
+      } else {
+        throw new Error(response.message || 'Failed to update task');
       }
     } catch (err) {
-      enqueueSnackbar(err.message || 'Failed to update task', { variant: 'error' });
+      console.error('Update error:', err);
+      enqueueSnackbar(
+        err.response?.data?.message || 
+        err.message || 
+        'Failed to update task', 
+        { variant: 'error' }
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -316,13 +323,6 @@ export default function HometaskList({ hometasks, courses = [], onTaskComplete, 
                 Please fix the errors in the form
               </Alert>
             )}
-            
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2">Course:</Typography>
-              <Typography>
-                {selectedTask ? getCourseName(selectedTask.courseId) : 'No course selected'}
-              </Typography>
-            </Box>
             
             <TextField
               name="description"

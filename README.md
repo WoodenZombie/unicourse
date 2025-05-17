@@ -7,7 +7,6 @@ This application was built as a hometask for a "Cloud-based application" course 
 ![MUI](https://img.shields.io/badge/MUI-%230081CB.svg?style=for-the-badge&logo=mui&logoColor=white)
 ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
 
-A modern web application for students to manage courses, assignments, and deadlines.
 
 ## 🛠 Tech Stack
 
