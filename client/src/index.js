@@ -6,7 +6,7 @@ import theme from './theme.js';
 import { ThemeProvider } from '@mui/material/styles/index.js';
 import CssBaseline from '@mui/material/CssBaseline/index.js';
 
-// Create a client
+// create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

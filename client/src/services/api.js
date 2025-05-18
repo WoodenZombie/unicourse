@@ -41,12 +41,12 @@ const handleRequest = async (request) => {
 };
 
 const validateId = (id) => {
-  // Handle MongoDB ObjectId
+  // handle MongoDB ObjectId
   if (id && typeof id === 'object' && id.toString) {
     return id.toString();
   }
   
-  // Handle string/number IDs
+  // handle string/number IDs
   if (id === undefined || id === null) {
     throw new Error('ID is required');
   }
@@ -60,10 +60,10 @@ const validateId = (id) => {
 };
 
 const apiService = {
-  // Dashboard
+  // dashboard
   getDashboard: () => handleRequest(api.get('/dashboard')),
   
-  // Courses
+  // courses
   getAllCourses: () => handleRequest(api.get('/courses')),
   createCourse: async (courseData) => {
     return handleRequest(api.post(`/courses`, courseData));
@@ -85,7 +85,7 @@ const apiService = {
     return handleRequest(api.get(`/courses/${courseId}/hometasks`));
   },
   
-  // Hometasks
+  // hometasks
   getAllHometasks: () => handleRequest(api.get('/hometasks')),
   createHometask: (taskData) => {
     console.log('Submitting hometask:', {taskData});
@@ -107,7 +107,7 @@ const apiService = {
     return handleRequest(api.delete(`/hometasks/${hometaskId}`));
   },
 
-  // Health check
+  // health check
   checkHealth: () => handleRequest(api.get('/health'))
 };
 

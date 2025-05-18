@@ -46,18 +46,18 @@ export default function HometaskList({ hometasks, courses = [], onTaskComplete, 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Form state for editing
+  // form state for editing
   const [editForm, setEditForm] = useState({
     description: '',
     deadline: '',
     status: 'pending'
   });
 
-  // Safely handle hometasks and courses props
+  // safely handle hometasks and courses props
   const safeHometasks = Array.isArray(hometasks) ? hometasks : [];
   const safeCourses = Array.isArray(courses) ? courses : [];
 
-  // Group tasks by status and due date
+  // group tasks by status and due date
   const overdueTasks = safeHometasks.filter(task => 
     task?.status !== 'completed' && dayjs(task?.deadline).isBefore(dayjs())
   );
@@ -66,7 +66,7 @@ export default function HometaskList({ hometasks, courses = [], onTaskComplete, 
   );
   const completedTasks = safeHometasks.filter(task => task?.status === 'completed');
 
-  // Handle both string and object course references
+  // handle both string and object course references
   const getCourseName = (courseId) => {
     if (!courseId) return 'Unknown Course';
     
@@ -86,7 +86,7 @@ export default function HometaskList({ hometasks, courses = [], onTaskComplete, 
     return courseId._id || courseId;
   };
 
-  // Open edit modal and initialize form
+  // open edit modal and initialize form
   const handleEditClick = (task) => {
     setSelectedTask(task);
     setEditForm({
@@ -97,7 +97,7 @@ export default function HometaskList({ hometasks, courses = [], onTaskComplete, 
     setEditModalOpen(true);
   };
 
-  // Handle form changes
+  // handle form changes
   const handleEditFormChange = (e) => {
     const { name, value } = e.target;
     setEditForm(prev => ({ ...prev, [name]: value }));
@@ -106,7 +106,7 @@ export default function HometaskList({ hometasks, courses = [], onTaskComplete, 
     }
   };
 
-  // Validate form
+  // validate form
   const validateForm = () => {
     const newErrors = {};
     if (!editForm.description.trim()) newErrors.description = 'Description is required';
@@ -135,7 +135,7 @@ console.log('Data being sent:', {
       const response = await api.updateHometask(selectedTask._id, {
         ...editForm,
         deadline: new Date(editForm.deadline).toISOString(),
-        courseId: selectedTask.courseId // Preserve original course ID
+        courseId: selectedTask.courseId // preserve original course ID
       });
       
       if (response.success) {

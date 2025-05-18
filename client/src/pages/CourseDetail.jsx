@@ -18,7 +18,6 @@ import AddHometaskModal from '../components/AddHometaskModal';
 import HometaskList from '../components/HometaskList';
 import EditCourseModal from '../components/EditCourseModal';
 import api from '../services/api';
-import dayjs from 'dayjs';
 
 export default function CourseDetail() {
   const { enqueueSnackbar } = useSnackbar();
@@ -42,7 +41,7 @@ export default function CourseDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // First validate the ID
+        // first validate the ID
         if (!id || id.length !== 24) { // MongoDB IDs are 24 chars long
           throw new Error('Invalid course ID format');
         }
@@ -68,7 +67,7 @@ export default function CourseDetail() {
         setError(err.message);
         console.error('Course fetch error:', err);
         enqueueSnackbar(err.message || 'Failed to load course data', { variant: 'error' });
-        navigate('/dashboard'); // Redirect to dashboard if error occurs
+        navigate('/dashboard'); // redirect to dashboard if error occurs
       } finally {
         setLoading(false);
       }
@@ -95,7 +94,7 @@ export default function CourseDetail() {
     }
   };
   const handleEditTask = (task) => {
-    // Open your edit modal with the task data
+    // open edit modal with the task data
     setSelectedTask(task);
     setOpenEditModal(true);
   };

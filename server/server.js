@@ -7,11 +7,11 @@ import dashboardRoutes from './routes/dashboard.js';
 
 const app = express();
 
-// Basic middleware
+// basic middleware
 app.use(cors());
 app.use(express.json());
 
-// Database connection
+// database connection
 const MONGODB_URI = 'mongodb://localhost:27017/unicourse';
 const PORT = 5000;
 
@@ -28,23 +28,23 @@ const connectDB = async () => {
   }
 };
 
-// Routes
+// routes
 app.use('/api/courses', courseRoutes);
 app.use('/api/hometasks', hometaskRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// Health check
+// health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
-// Error handling
+// error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ success: false, message: 'Server error' });
 });
 
-// Start server
+// start server
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

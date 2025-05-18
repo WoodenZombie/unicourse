@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 
     const currentDate = new Date();
 
-    // Calculate statistics
+    // calculate statistics
     const stats = {
       totalCourses: courses.length,
       totalHometasks: hometasks.length,
@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
       pendingHometasks: hometasks.filter(t => t.status !== 'completed').length
     };
 
-    // Get recent activities
+    // get recent activities
     const recentCourses = courses
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 3);

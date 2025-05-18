@@ -7,19 +7,10 @@ import {
   CircularProgress,
   Box,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
-  InputAdornment,
-  Chip
+  InputAdornment
 } from '@mui/material';
 import {
-  School,
-  Person,
-  Schedule,
-  Star,
   Add,
   Search,
   ArrowForward
@@ -37,7 +28,7 @@ export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { enqueueSnackbar } = useSnackbar();
 
-  // Fetch courses
+  // fetch courses
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -60,7 +51,7 @@ export default function CoursesPage() {
     fetchCourses();
   }, []);
 
-  // Handle adding new course
+  // handle adding new course
   const handleAddCourse = async (courseData) => {
     try {
       const response = await api.createCourse(courseData);
@@ -78,7 +69,7 @@ export default function CoursesPage() {
     }
   };
 
-  // Handle deleting course
+  // handle deleting course
   const handleDeleteCourse = async (courseId) => {
     try {
       const response = await api.deleteCourse(courseId);
@@ -95,7 +86,7 @@ export default function CoursesPage() {
     }
   };
 
-  // Filter courses based on search term
+  // filter courses based on search term
   const filteredCourses = courses.filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.professor.toLowerCase().includes(searchTerm.toLowerCase())

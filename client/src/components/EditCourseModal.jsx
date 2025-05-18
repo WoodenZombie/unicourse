@@ -36,7 +36,7 @@ export default function EditCourseModal({ open, onClose, course, onSubmit }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
-  // Initialize form with course data
+  // initialize form with course data
   useEffect(() => {
     if (course) {
       setForm({
@@ -119,8 +119,7 @@ export default function EditCourseModal({ open, onClose, course, onSubmit }) {
           )}
         </Stack>
       </DialogTitle>
-      
-      {/* Rest of your dialog content remains the same */}
+  
       <DialogContent dividers>
   <Stack spacing={3} sx={{ pt: 2 }}>
     {Object.keys(errors).length > 0 && (
